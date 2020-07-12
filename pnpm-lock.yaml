@@ -1,0 +1,38 @@
+devDependencies:
+  '@types/cheerio': 0.22.21
+  '@types/google-apps-script': 1.0.14
+  clasp: 1.0.0
+  typescript: 3.7.4
+lockfileVersion: 5.1
+packages:
+  /@types/cheerio/0.22.21:
+    dependencies:
+      '@types/node': 14.0.22
+    dev: true
+    resolution:
+      integrity: sha512-aGI3DfswwqgKPiEOTaiHV2ZPC9KEhprpgEbJnv0fZl3SGX0cGgEva1126dGrMC6AJM6v/aihlUgJn9M5DbDZ/Q==
+  /@types/google-apps-script/1.0.14:
+    dev: true
+    resolution:
+      integrity: sha512-dxYrClArM39GGlANFbCJiBg+wBmmK5VuBW2/JBaqg6Bo/OpAcXJoQ69zml6HmuHoKJDw1WR+BRxeJ/U9L9dk8A==
+  /@types/node/14.0.22:
+    dev: true
+    resolution:
+      integrity: sha512-emeGcJvdiZ4Z3ohbmw93E/64jRzUHAItSHt8nF7M4TGgQTiWqFVGB8KNpLGFmUHmHLvjvBgFwVlqNcq+VuGv9g==
+  /clasp/1.0.0:
+    dev: true
+    requiresBuild: true
+    resolution:
+      integrity: sha512-JkgxdZvYBtqIlGPvC5oRZ548eHpfx+81z5GXckpXcMkRTZDddkQfwK60w1YE32n8ovGoSW88pbsIvCPOKM6hyA==
+  /typescript/3.7.4:
+    dev: true
+    engines:
+      node: '>=4.2.0'
+    hasBin: true
+    resolution:
+      integrity: sha512-A25xv5XCtarLwXpcDNZzCGvW2D1S3/bACratYBx2sax8PefsFhlYmkQicKHvpYflFS8if4zne5zT5kpJ7pzuvw==
+specifiers:
+  '@types/cheerio': 0.22.21
+  '@types/google-apps-script': ^1.0.14
+  clasp: ^1.0.0
+  typescript: 3.7.4

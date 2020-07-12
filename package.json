@@ -1,0 +1,17 @@
+{
+  "name": "mhw-events-app-script",
+  "version": "1.0.0",
+  "description": "A clasp project that loads the MHW event schedule into a google sheet.",
+  "scripts": {
+    "deploy": "clasp push",
+    "start": "clasp run main"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/google-apps-script": "^1.0.14",
+    "@types/cheerio": "0.22.21",
+    "clasp": "^1.0.0",
+    "typescript": "3.7.4"
+  }
+}
