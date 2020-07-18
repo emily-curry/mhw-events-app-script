@@ -10,42 +10,62 @@ class SpreadsheetManager {
     description: 'Description',
     status: '✔',
     notes: 'Notes',
+    tags: 'Tags',
   } as const;
 
   public static readonly ConfigKey = {
     timezone: 'Timezone',
+    ignoreTags: 'Ignore Tags',
   } as const;
+  private readonly sheet: GoogleAppsScript.Spreadsheet.Sheet;
+  private readonly colId: Record<keyof typeof SpreadsheetManager.ColumnName, number>;
+
+  constructor() {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Events');
+    if (!sheet) throw new Error("No sheet named 'Events'.");
+    this.sheet = sheet;
+    this.colId = Object.entries(SpreadsheetManager.ColumnName).reduce(
+      (acc, [key, colName]) => ({
+        ...acc,
+        [key]: this.getNamedColumnId(this.sheet, colName),
+      }),
+      {} as any
+    );
+  }
 
   /**
    * Loads all data from the MHW event schedule and merges it with the existing data in the spreadsheet.
    */
   public load(): void {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Events');
-    if (!sheet) throw new Error("No sheet named 'Events'.");
-    const colId: Record<keyof typeof SpreadsheetManager.ColumnName, number> = {} as any;
-    for (const key of Object.getOwnPropertyNames(SpreadsheetManager.ColumnName) as Array<
-      keyof typeof SpreadsheetManager.ColumnName
-    >) {
-      colId[key] = this.getNamedColumnId(sheet, SpreadsheetManager.ColumnName[key]);
-    }
     const config = this.getConfigFromSheet();
     const eventLoader = new MHWEventLoader(config);
     const events = eventLoader.loadEvents();
-    for (const event of events) {
-      const dataRange = sheet.getDataRange();
-      const found = sheet
-        .getRange(1, colId.title, dataRange.getNumRows(), 1)
-        .createTextFinder(event.title)
-        .findNext();
-      const rowIndex = found ? found.getRow() : dataRange.getNumRows() + 1;
-      for (const key of ['title', 'startDate', 'level', 'endDate', 'description'] as Array<
-        keyof MHWEvent
-      >) {
-        sheet.getRange(rowIndex, colId[key]).setValue(event[key]);
+    for (const event of events) this.loadEvent(event);
+  }
+
+  /**
+   * Loads a single event from the schedule into the spreadsheet, merging it with existing data.
+   * @param event The event data to load into the spreadsheet.
+   */
+  private loadEvent(event: MHWEvent): void {
+    const dataRange = this.sheet.getDataRange();
+    const existing = this.sheet
+      .getRange(1, this.colId.title, dataRange.getNumRows(), 1)
+      .createTextFinder(event.title)
+      .findNext();
+    const rowIndex = existing ? existing.getRow() : dataRange.getNumRows() + 1;
+    for (const key of ['title', 'startDate', 'level', 'endDate', 'description', 'tags'] as const) {
+      const cell = this.sheet.getRange(rowIndex, this.colId[key]);
+      switch (key) {
+        case 'tags':
+          cell.setValue(event[key].join(', '));
+          break;
+        default:
+          cell.setValue(event[key]);
       }
-      if (found === null) {
-        sheet.getRange(rowIndex, colId.status).setValue(0);
-      }
+    }
+    if (existing === null) {
+      this.sheet.getRange(rowIndex, this.colId.status).setValue(0);
     }
   }
 
@@ -58,24 +78,20 @@ class SpreadsheetManager {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Config');
     if (!sheet) throw new Error('No sheet named [ Config ]');
     const dataRange = sheet.getDataRange();
-    const keys = Object.getOwnPropertyNames(SpreadsheetManager.ConfigKey) as Array<
-      keyof typeof SpreadsheetManager.ConfigKey
-    >;
     const keyCol = this.getNamedColumnId(sheet, 'Key');
     const valueCol = this.getNamedColumnId(sheet, 'Value');
-    const config = keys.reduce<Record<keyof typeof SpreadsheetManager.ConfigKey, string>>(
-      (acc, val) => {
-        const found = sheet
-          .getRange(1, keyCol, dataRange.getNumRows(), 1)
-          .createTextFinder(SpreadsheetManager.ConfigKey[val])
-          .findNext();
-        if (!found)
-          throw new Error(`Config key [ ${SpreadsheetManager.ConfigKey[val]} ] not found in sheet`);
-        const row = found.getRow();
-        return { ...acc, [val]: sheet.getRange(row, valueCol).getValue() };
-      },
-      {} as any
-    );
+    const config = Object.entries(SpreadsheetManager.ConfigKey).reduce((acc, [key, cfgName]) => {
+      const found = sheet
+        .getRange(1, keyCol, dataRange.getNumRows(), 1)
+        .createTextFinder(cfgName)
+        .findNext();
+      if (!found) throw new Error(`Config key [ ${cfgName} ] not found in sheet`);
+      const row = found.getRow();
+      const rawValue: string = sheet.getRange(row, valueCol).getValue() ?? '';
+      const value = key === 'ignoreTags' ? new Set(rawValue.replace(' ', '').split(',')) : rawValue;
+      Logger.log(`Loaded config property ${key}: ${rawValue}`);
+      return { ...acc, [key]: value };
+    }, {} as MHWEventConfig);
     return config;
   }
 

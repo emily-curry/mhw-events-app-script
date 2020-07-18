@@ -1,3 +1,10 @@
+enum EventTag {
+  New = 'New',
+  PS4 = 'PS4',
+  Xbox = 'Xbox',
+  Collab = 'Collab',
+}
+
 /**
  * A utility for reading the MHW schedule pages and parsing them into usable event data.
  */
@@ -5,6 +12,12 @@ class MHWEventLoader {
   private readonly originalUrl = 'http://game.capcom.com/world/steam/us/schedule.html?utc=0';
   private readonly masterRankUrl =
     'http://game.capcom.com/world/steam/us/schedule-master.html?utc=0';
+  private readonly tagRules: Record<EventTag, (el: Cheerio) => boolean> = {
+    [EventTag.New]: (el) => el.hasClass('new'),
+    [EventTag.PS4]: (el) => el.find('.ps4').length > 0,
+    [EventTag.Xbox]: (el) => el.find('.xbox').length > 0,
+    [EventTag.Collab]: (el) => el.hasClass('sc'),
+  };
 
   public constructor(private config: MHWEventConfig) {}
 
@@ -39,7 +52,8 @@ class MHWEventLoader {
       .reduce<MHWEvent[]>((acc, val) => {
         if (acc.some((i) => i.title === val.title)) return acc;
         return [...acc, val];
-      }, []);
+      }, [])
+      .filter((i) => i.tags.every((t) => !this.config.ignoreTags.has(t)));
     return quests;
   }
 
@@ -91,7 +105,10 @@ class MHWEventLoader {
       .text()
       .split('〜')
       .map((i) => this.processDate(i, tz, this.config.timezone));
-    const result = { title, description, level, startDate, endDate };
+    const tags = Object.entries(this.tagRules)
+      .map(([tag, rule]) => (rule(el) ? tag : undefined))
+      .filter((i) => i !== undefined) as string[];
+    const result = { title, description, level, startDate, endDate, tags };
     return result;
   }
 

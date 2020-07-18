@@ -8,8 +8,10 @@ interface MHWEvent {
   level: string;
   startDate: string;
   endDate: string;
+  tags: string[];
 }
 
 interface MHWEventConfig {
   timezone: string;
+  ignoreTags: Set<string>;
 }

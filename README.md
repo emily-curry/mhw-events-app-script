@@ -13,6 +13,7 @@ Some notes:
 - The `Key` sheet explains what all the color coding means.
 - The `Config` sheet contains user settings.
   - You may change the timezone to your [tz database name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) and the datetime values in the sheet will be updated to match on next update.
+  - You may change the list of ignored tags. Events with a tag in this list will be excluded from updates. By default, filters Xbox/PS4 exclusives.
 - The `✔` and `Notes` columns can contain whatever you want to put in them. They will not be modified by the script. All other columns will be overwritten on update.
 - You may go to Tools > Script Editor to view the (transpiled) source of the script and make any changes you want.
   - Any future changes made to the published script/document will not propagate to your copy.
